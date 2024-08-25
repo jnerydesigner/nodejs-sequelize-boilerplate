@@ -6,14 +6,14 @@ export class UserEntity {
     readonly name: string,
     readonly email: string,
     readonly password: string,
-    readonly created_at?: Date,
-    readonly updated_at?: Date
+    readonly createdAt?: Date,
+    readonly updatedAt?: Date
   ) {
     this.id = id;
     this.name = name;
     this.email = email;
-    this.created_at = created_at;
-    this.updated_at = updated_at;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
     this.password = password;
   }
 

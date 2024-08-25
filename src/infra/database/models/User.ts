@@ -39,10 +39,12 @@ class User extends Model {
   declare password: string;
 
   @CreatedAt
-  declare created_at: Date;
+  @Column({ field: "created_at" })
+  declare createdAt: Date;
 
   @UpdatedAt
-  declare updated_at: Date;
+  @Column({ field: "updated_at" })
+  declare updatedAt: Date;
 }
 
 export default User;

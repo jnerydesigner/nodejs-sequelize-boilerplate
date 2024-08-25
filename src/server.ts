@@ -3,11 +3,13 @@ import "reflect-metadata";
 import express, { Request, Response } from "express";
 import sequelize from "./infra/database/connection";
 import User from "./infra/database/models/User";
-import { UserEntity } from "./domain/user.entity";
-import { FindAllUsersUseCase } from "./application/usecase/users/find-all.use-case";
-import { CreateUserUsecase } from "./application/usecase/users/create-user.use-case.ts";
+import { UserEntity } from "./domain/entities/user.entity";
+import { FindAllUsersUseCase } from "./application/usecase/users/find-all.usecase";
+import { CreateUserUsecase } from "./application/usecase/users/create-user.usecase.ts";
 import { UpdateUserUsecase } from "./application/usecase/users/update-user.usecase";
 import { DeleteUserUseCase } from "./application/usecase/users/delete-user.usecase";
+import UserController from "./presenters/user.controller";
+import { UserSequelizeRepository } from "./infra/database/repository/user-sequelize.repository";
 
 const app = express();
 const PORT = Number(process.env.SERVER_PORT);
@@ -19,20 +21,21 @@ const start = async () => {
 
 start();
 
-const findAll = new FindAllUsersUseCase();
-const createUser = new CreateUserUsecase();
+const userRepository = new UserSequelizeRepository();
+const findAll = new FindAllUsersUseCase(userRepository);
+const createUser = new CreateUserUsecase(userRepository);
 const userUpdate = new UpdateUserUsecase();
-const deleteUser = new DeleteUserUseCase();
+const deleteUser = new DeleteUserUseCase(userRepository);
+const userController = new UserController(
+  findAll,
+  createUser,
+  userUpdate,
+  deleteUser
+);
 
 app.post("/users", async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
-
   try {
-    const user = await createUser.execute({
-      name,
-      email,
-      password,
-    });
+    const user = await userController.createUser(req, res);
     res.status(201).json(user);
   } catch (error) {
     res.status(400).json({ error: "User already exists" });
@@ -40,29 +43,18 @@ app.post("/users", async (req: Request, res: Response) => {
 });
 
 app.put("/users/:userId", async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
-  const { userId } = req.params;
-
   try {
-    const user = await userUpdate.execute({
-      id: userId,
-      name,
-      email,
-      password,
-    });
+    const user = await userController.updateUser(req, res);
     res.status(201).json(user);
   } catch (error) {
     res.status(400).json({ error: "User already exists" });
   }
 });
-app.delete("/users/:userId", async (req: Request, res: Response) => {
-  const { userId } = req.params;
 
+app.delete("/users/:userId", async (req: Request, res: Response) => {
   try {
-    await deleteUser.execute(
-      userId,
-    );
-    res.status(201).json({
+    await userController.deleteUser(req, res);
+    res.status(204).json({
       message: "User deleted",
     });
   } catch (error) {
@@ -71,7 +63,7 @@ app.delete("/users/:userId", async (req: Request, res: Response) => {
 });
 
 app.get("/users", async (req: Request, res: Response) => {
-  const users = await findAll.execute();
+  const users = await userController.findAll(req, res);
   res.status(200).json(users);
 });
 

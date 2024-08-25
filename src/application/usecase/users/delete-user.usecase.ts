@@ -1,16 +1,8 @@
-import User from "@/infra/database/models/User";
+import { UserSequelizeRepository } from "@/infra/database/repository/user-sequelize.repository";
 
 export class DeleteUserUseCase {
+  constructor(readonly userRepository: UserSequelizeRepository) {}
   async execute(userId: string): Promise<void> {
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
-    if (!user) {
-      throw new Error("User not exists");
-    }
-
-    await user.destroy();
+    await this.userRepository.delete(userId);
   }
 }
